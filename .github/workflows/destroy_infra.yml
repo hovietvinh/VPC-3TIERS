@@ -63,8 +63,30 @@ jobs:
           BUCKET_NAME="vpc-${{ env.DEPLOY_ENV }}-terraform-state-${ACCOUNT_ID}"
           TABLE_NAME="vpc-${{ env.DEPLOY_ENV }}-terraform-locks-${ACCOUNT_ID}"
 
+          echo "Emptying all object versions from $BUCKET_NAME..."
+          aws s3api list-object-versions --bucket "$BUCKET_NAME" \
+            --output text \
+            --query 'Versions[*].[Key,VersionId]' | \
+            while read -r key version; do
+              if [ -n "$key" ] && [ "$key" != "None" ]; then
+                aws s3api delete-object --bucket "$BUCKET_NAME" --key "$key" --version-id "$version"
+              fi
+            done
+
+          echo "Emptying all delete markers from $BUCKET_NAME..."
+          aws s3api list-object-versions --bucket "$BUCKET_NAME" \
+            --output text \
+            --query 'DeleteMarkers[*].[Key,VersionId]' | \
+            while read -r key version; do
+              if [ -n "$key" ] && [ "$key" != "None" ]; then
+                aws s3api delete-object --bucket "$BUCKET_NAME" --key "$key" --version-id "$version"
+              fi
+            done
+
+          echo "Deleting the empty bucket..."
           aws s3 rb s3://$BUCKET_NAME --force
           
+          echo "Deleting DynamoDB table..."
           aws dynamodb delete-table --table-name $TABLE_NAME --region ${{ env.AWS_REGION }}
           
           echo "Cleanup backend successfully!"

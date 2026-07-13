@@ -53,13 +53,6 @@ jobs:
         with:
           terraform_version: 1.14.4
       
-      - name: Verify AWS Access
-        run: |
-          echo "Verifying AWS access..."
-          aws sts get-caller-identity
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "Account ID: $ACCOUNT_ID"
-      
       - name: Setup Terraform Backend (S3 + DynamoDB)
         run: |
           ENV="${{ env.DEPLOY_ENV }}"

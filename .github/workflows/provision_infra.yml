@@ -169,6 +169,27 @@ jobs:
           terraform apply -auto-approve tfplan
           echo "Terraform apply completed successfully!"
 
+      - name: Show Infrastructure Outputs
+        if: env.RUN_APPLY == 'yes'
+        working-directory: ./terraform/environments/${{ env.DEPLOY_ENV }}
+        run: |
+          
+          VPC_ID=$(terraform output -raw vpc_id)
+          
+          PUBLIC_SUBNETS=$(terraform output -json public_subnet_ids)
+          PRIVATE_SUBNETS=$(terraform output -json private_subnet_ids)
+
+          # 1. In ra Console Log
+          echo "=== TERRAFORM OUTPUTS ==="
+          echo "VPC ID: $VPC_ID"
+          echo "Public Subnets: $PUBLIC_SUBNETS"
+          echo "Private Subnets: $PRIVATE_SUBNETS"
+
+          echo "### 🏗️ AWS Infrastructure Provisioned" >> $GITHUB_STEP_SUMMARY
+          echo "- **VPC ID**: \`$VPC_ID\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Public Subnets**: \`$PUBLIC_SUBNETS\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Private Subnets**: \`$PRIVATE_SUBNETS\`" >> $GITHUB_STEP_SUMMARY
+
 
 
       
